@@ -5,6 +5,7 @@ import (
 
 	"github.com/keycloak/keycloak-realm-operator/pkg/controller/keycloakuser"
 
+	"github.com/keycloak/keycloak-realm-operator/pkg/apis/keycloak/v1alpha1"
 	kc "github.com/keycloak/keycloak-realm-operator/pkg/apis/keycloak/v1alpha1"
 	"github.com/keycloak/keycloak-realm-operator/pkg/common"
 	"github.com/keycloak/keycloak-realm-operator/pkg/model"
@@ -62,6 +63,13 @@ func (i *KeycloakClientReconciler) Reconcile(state *common.ClientState, cr *kc.K
 	i.ReconcileClientScopes(state, cr, &desired)
 
 	i.ReconcileDefaultClientRoles(state, cr, &desired)
+
+	// TODO import extracted authorization settings
+	// -> Extract authorization settings
+
+	if cr.Spec.Client.AuthorizationServicesEnabled {
+		i.ReconcileAuthorizationSettings(state, cr, &desired)
+	}
 
 	if cr.Spec.Client.ServiceAccountsEnabled {
 		i.ReconcileServiceAccountRoles(state, cr, &desired)
@@ -168,6 +176,58 @@ func (i *KeycloakClientReconciler) ReconcileClientScopes(state *common.ClientSta
 	optionalClientScopesDeleted, _ := model.ClientScopeDifferenceIntersection(state.OptionalClientScopes, optionalClientScopes)
 	for _, clientScope := range optionalClientScopesDeleted {
 		desired.AddAction(i.getDeletedClientOptionalClientScopeState(state, cr, clientScope.DeepCopy()))
+	}
+}
+
+func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
+	if state.Client.AuthorizationSettings != nil {
+		policiesDeleted, _ := model.AuthorizationPoliciesDifferenceIntersection(state.Client.AuthorizationSettings.Policies, cr.Spec.Client.AuthorizationSettings.Policies)
+
+		// Delete any policies that only exist in state, but not in CR
+		for _, policy := range policiesDeleted {
+			desired.AddAction(i.getDeletedClientAuthorizationPolicyState(state, cr, policy))
+		}
+
+		// Track policies that exist in state
+		existingPoliciesById := make(map[string]v1alpha1.KeycloakPolicy)
+		for _, policy := range state.Client.AuthorizationSettings.Policies {
+			existingPoliciesById[policy.ID] = policy
+		}
+
+		// Check for new policies in CR, and matching policies in both CR and state
+		newPolicies, matchingPolicies := model.AuthorizationPoliciesDifferenceIntersection(cr.Spec.Client.AuthorizationSettings.Policies, state.Client.AuthorizationSettings.Policies)
+		renamedPoliciesOldNames := make(map[string]bool)
+		for _, policy := range matchingPolicies {
+			// If their ID exists, update that policy
+			if policy.ID != "" {
+				oldPolicy := existingPoliciesById[policy.ID]
+				desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), oldPolicy.DeepCopy()))
+
+				// If the name has changed, keep track of old names before renaming
+				if policy.Name != oldPolicy.Name {
+					renamedPoliciesOldNames[oldPolicy.Name] = true
+				}
+			}
+		}
+
+		// seemingly matching policies without an ID can either be regular updates
+		// or re-creations after renames (not deletions)
+		for _, policy := range matchingPolicies {
+			if policy.ID == "" {
+				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
+					desired.AddAction(i.getCreatedAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+				} else {
+					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
+				}
+			}
+		}
+
+		// always create policies that don't match any existing ones
+		for _, policy := range newPolicies {
+			desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+		}
+	} else {
+		log.Info("Authorization settings not found, skipping authorization settings reconciliation")
 	}
 }
 
@@ -458,4 +518,8 @@ func (i *KeycloakClientReconciler) getDeletedClientOptionalClientScopeState(stat
 		Realm:       state.Realm.Spec.Realm.Realm,
 		Msg:         fmt.Sprintf("delete client optional client scope %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, clientScope.Name),
 	}
+}
+
+func (i *KeycloakClientReconciler) getDeletedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakPolicy) common.ClusterAction {
+	return common.DeleteClientAuthorizationPolicyAction{}
 }

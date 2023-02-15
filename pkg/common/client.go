@@ -16,6 +16,7 @@ import (
 	"github.com/keycloak/keycloak-realm-operator/pkg/apis/keycloak/v1alpha1"
 	"github.com/keycloak/keycloak-realm-operator/pkg/model"
 	"github.com/pkg/errors"
+	"github.com/prometheus/common/log"
 	"github.com/sirupsen/logrus"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -962,6 +963,8 @@ type KeycloakInterface interface {
 	DeleteClientDefaultClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 	UpdateClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 	DeleteClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
+
+	// TODO implement API for updating authorization policies
 
 	CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error)
 	CreateFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) (string, error)
