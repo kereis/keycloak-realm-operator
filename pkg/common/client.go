@@ -991,10 +991,16 @@ type KeycloakInterface interface {
 	UpdateClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 	DeleteClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 
-	// TODO implement API for updating authorization policies
 	CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error)
 	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
+
+	// TODO implement API for updating authorization resources
+
+	// TODO implement API for updating authorization scopes?
+
+	// TODO implement API for updating authorization permissions
+	
 
 	CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error)
 	CreateFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) (string, error)
