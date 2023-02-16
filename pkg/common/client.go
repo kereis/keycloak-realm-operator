@@ -115,6 +115,33 @@ func (c *Client) CreateClientClientScopeMappings(specClient *v1alpha1.KeycloakAP
 	return err
 }
 
+// / POST /realms/%s/clients/%s/authz/resource-server/policy
+func (c *Client) CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error) {
+	return c.create(
+		[]*v1alpha1.KeycloakPolicy{specPolicy},
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, specClient.ID),
+		"client authorization service => policy",
+	)
+}
+
+// / PUT /realms/%s/clients/%s/authz/resource-server/policy/{id}
+func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
+	return c.update(
+		[]*v1alpha1.KeycloakPolicy{specPolicy},
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, specClient.ID),
+		"client authorization service => policy",
+	)
+}
+
+// / DELETE /realms/%s/clients/%s/authz/resource-server/policy/{id}
+func (c *Client) DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
+	return c.delete(
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID, specClient.ID),
+		"client authorization service => policy",
+		nil,
+	)
+}
+
 func (c *Client) CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error) {
 	return c.create(user, fmt.Sprintf("realms/%s/users", realmName), "user")
 }
@@ -965,6 +992,9 @@ type KeycloakInterface interface {
 	DeleteClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 
 	// TODO implement API for updating authorization policies
+	CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error)
+	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
+	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 
 	CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error)
 	CreateFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) (string, error)
@@ -1009,7 +1039,7 @@ var _ KeycloakInterface = &Client{}
 
 //go:generate moq -out keycloakClientFactory_moq.go . KeycloakClientFactory
 
-//KeycloakClientFactory interface
+// KeycloakClientFactory interface
 type KeycloakClientFactory interface {
 	AuthenticatedClient(kc v1alpha1.ExternalKeycloak) (KeycloakInterface, error)
 }
