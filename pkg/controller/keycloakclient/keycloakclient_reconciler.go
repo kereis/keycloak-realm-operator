@@ -185,7 +185,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.
 
 		// Delete any policies that only exist in state, but not in CR
 		for _, policy := range policiesDeleted {
-			desired.AddAction(i.getDeletedClientAuthorizationPolicyState(state, cr, policy))
+			desired.AddAction(i.getDeletedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
 		}
 
 		// Track policies that exist in state
@@ -215,7 +215,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.
 		for _, policy := range matchingPolicies {
 			if policy.ID == "" {
 				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
-					desired.AddAction(i.getCreatedAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+					desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
 				} else {
 					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
 				}
@@ -520,6 +520,30 @@ func (i *KeycloakClientReconciler) getDeletedClientOptionalClientScopeState(stat
 	}
 }
 
+func (i *KeycloakClientReconciler) getCreatedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakPolicy) common.ClusterAction {
+	return common.CreateClientAuthorizationPolicyAction{
+		AuthorizationPolicy: policy,
+		Ref: cr,
+		Realm: state.Realm.Spec.Realm.Realm,
+		Msg: fmt.Sprintf("create client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+	}
+}
+
+func (i *KeycloakClientReconciler) getUpdatedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, newPolicy *kc.KeycloakPolicy, oldPolicy *kc.KeycloakPolicy) common.ClusterAction {
+	return common.UpdateClientAuthorizationPolicyAction{
+		NewAuthorizationPolicy: newPolicy,
+		OldAuthorizationPolicy: oldPolicy,
+		Ref: cr,
+		Realm: state.Realm.Spec.Realm.Realm,
+		Msg: fmt.Sprintf("update client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+	}
+}
+
 func (i *KeycloakClientReconciler) getDeletedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakPolicy) common.ClusterAction {
-	return common.DeleteClientAuthorizationPolicyAction{}
+	return common.DeleteClientAuthorizationPolicyAction{
+		AuthorizationPolicy: policy,
+		Ref: cr,
+		Realm: state.Realm.Spec.Realm.Realm,
+		Msg: fmt.Sprintf("delete client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+	}
 }
