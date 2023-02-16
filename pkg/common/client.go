@@ -1000,7 +1000,6 @@ type KeycloakInterface interface {
 	// TODO implement API for updating authorization scopes?
 
 	// TODO implement API for updating authorization permissions
-	
 
 	CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error)
 	CreateFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) (string, error)

@@ -523,9 +523,9 @@ func (i *KeycloakClientReconciler) getDeletedClientOptionalClientScopeState(stat
 func (i *KeycloakClientReconciler) getCreatedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakPolicy) common.ClusterAction {
 	return common.CreateClientAuthorizationPolicyAction{
 		AuthorizationPolicy: policy,
-		Ref: cr,
-		Realm: state.Realm.Spec.Realm.Realm,
-		Msg: fmt.Sprintf("create client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+		Ref:                 cr,
+		Realm:               state.Realm.Spec.Realm.Realm,
+		Msg:                 fmt.Sprintf("create client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
 	}
 }
 
@@ -533,17 +533,17 @@ func (i *KeycloakClientReconciler) getUpdatedClientAuthorizationPolicyState(stat
 	return common.UpdateClientAuthorizationPolicyAction{
 		NewAuthorizationPolicy: newPolicy,
 		OldAuthorizationPolicy: oldPolicy,
-		Ref: cr,
-		Realm: state.Realm.Spec.Realm.Realm,
-		Msg: fmt.Sprintf("update client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+		Ref:                    cr,
+		Realm:                  state.Realm.Spec.Realm.Realm,
+		Msg:                    fmt.Sprintf("update client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
 	}
 }
 
 func (i *KeycloakClientReconciler) getDeletedClientAuthorizationPolicyState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakPolicy) common.ClusterAction {
 	return common.DeleteClientAuthorizationPolicyAction{
 		AuthorizationPolicy: policy,
-		Ref: cr,
-		Realm: state.Realm.Spec.Realm.Realm,
-		Msg: fmt.Sprintf("delete client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+		Ref:                 cr,
+		Realm:               state.Realm.Spec.Realm.Realm,
+		Msg:                 fmt.Sprintf("delete client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
 	}
 }
