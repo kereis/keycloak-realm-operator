@@ -412,21 +412,21 @@ func (i *ClusterActionRunner) configureBrowserRedirector(provider, flow string, 
 }
 
 func (i *ClusterActionRunner) CreateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error {
-	if (i.keycloakClient == nil) {
+	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy create when client is nil")
 	}
 	return nil // TODO
 }
 
 func (i *ClusterActionRunner) UpdateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realm string) error {
-	if (i.keycloakClient == nil) {
+	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy update when client is nil")
 	}
 	return nil // TODO
 }
 
 func (i *ClusterActionRunner) DeleteClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error {
-	if (i.keycloakClient == nil) {
+	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy delete when client is nil")
 	}
 	return nil // TODO
@@ -634,9 +634,9 @@ type RemoveClientRoleAction struct {
 
 type DeleteClientAuthorizationPolicyAction struct {
 	AuthorizationPolicy *v1alpha1.KeycloakPolicy
-	Ref					*v1alpha1.KeycloakClient
-	Realm				string
-	Msg					string
+	Ref                 *v1alpha1.KeycloakClient
+	Realm               string
+	Msg                 string
 }
 
 type CreateClientAuthorizationPolicyAction struct {
@@ -649,9 +649,9 @@ type CreateClientAuthorizationPolicyAction struct {
 type UpdateClientAuthorizationPolicyAction struct {
 	NewAuthorizationPolicy *v1alpha1.KeycloakPolicy
 	OldAuthorizationPolicy *v1alpha1.KeycloakPolicy
-	Ref					   *v1alpha1.KeycloakClient
-	Realm				   string
-	Msg					   string
+	Ref                    *v1alpha1.KeycloakClient
+	Realm                  string
+	Msg                    string
 }
 
 func (i GenericCreateAction) Run(runner ActionRunner) (string, error) {
