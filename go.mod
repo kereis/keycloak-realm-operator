@@ -2,6 +2,7 @@ module github.com/keycloak/keycloak-realm-operator
 
 require (
 	github.com/coreos/prometheus-operator v0.40.0
+	github.com/go-openapi/spec v0.19.7
 	github.com/integr8ly/grafana-operator/v3 v3.6.0
 	github.com/json-iterator/go v1.1.10
 	github.com/openshift/api v3.9.0+incompatible
@@ -11,7 +12,6 @@ require (
 	github.com/sirupsen/logrus v1.6.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.6.1
-	golang.org/x/tools v0.6.0 // indirect
 	k8s.io/api v0.20.6
 	k8s.io/apiextensions-apiserver v0.20.6
 	k8s.io/apimachinery v0.20.6
