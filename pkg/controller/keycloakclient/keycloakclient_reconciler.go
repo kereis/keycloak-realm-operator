@@ -535,7 +535,7 @@ func (i *KeycloakClientReconciler) getUpdatedClientAuthorizationPolicyState(stat
 		OldAuthorizationPolicy: oldPolicy,
 		Ref:                    cr,
 		Realm:                  state.Realm.Spec.Realm.Realm,
-		Msg:                    fmt.Sprintf("update client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+		Msg:                    fmt.Sprintf("update client authorization policy %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, newPolicy.Name),
 	}
 }
 
