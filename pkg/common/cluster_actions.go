@@ -41,6 +41,9 @@ type ActionRunner interface {
 	DeleteClientDefaultClientScope(keycloakClient *v1alpha1.KeycloakClient, clientScope *v1alpha1.KeycloakClientScope, realm string) error
 	UpdateClientOptionalClientScope(keycloakClient *v1alpha1.KeycloakClient, clientScope *v1alpha1.KeycloakClientScope, realm string) error
 	DeleteClientOptionalClientScope(keycloakClient *v1alpha1.KeycloakClient, clientScope *v1alpha1.KeycloakClientScope, realm string) error
+	DeleteClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, resource *v1alpha1.KeycloakResource, realm string) error
+	CreateClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, resource *v1alpha1.KeycloakResource, realm string) error
+	UpdateClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, newResource *v1alpha1.KeycloakResource, oldResource *v1alpha1.KeycloakResource, realm string) error
 	CreateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error
 	UpdateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realm string) error
 	DeleteClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error
@@ -146,7 +149,7 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 	}
 
 	// Keep original KeycloakClient struct
-	originalObj := obj
+	originalObj := obj.DeepCopy()
 
 	// Remove authorization settings
 	obj.Spec.Client.AuthorizationSettings = nil
@@ -411,6 +414,37 @@ func (i *ClusterActionRunner) configureBrowserRedirector(provider, flow string, 
 	return nil
 }
 
+func (i *ClusterActionRunner) DeleteClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, resource *v1alpha1.KeycloakResource, realm string) error {
+	if i.keycloakClient == nil {
+		return errors.Errorf("cannot perform authorization resource delete when client is nil")
+	}
+
+	return i.keycloakClient.DeleteClientAuthorizationResource(keycloakClient.Spec.Client, resource, realm)
+}
+
+func (i *ClusterActionRunner) CreateClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, resource *v1alpha1.KeycloakResource, realm string) error {
+	if i.keycloakClient == nil {
+		return errors.Errorf("cannot perform authorization resource create when client is nil")
+	}
+
+	resourceID, err := i.keycloakClient.CreateClientAuthorizationResource(keycloakClient.Spec.Client, resource, realm)
+	if err != nil {
+		return err
+	}
+
+	resource.ID = resourceID
+
+	return i.client.Update(i.context, keycloakClient)
+}
+
+func (i *ClusterActionRunner) UpdateClientAuthorizationResource(keycloakClient *v1alpha1.KeycloakClient, newResource *v1alpha1.KeycloakResource, oldResource *v1alpha1.KeycloakResource, realm string) error {
+	if i.keycloakClient == nil {
+		return errors.Errorf("cannot perform authorization resource update when client is nil")
+	}
+
+	return i.keycloakClient.UpdateClientAuthorizationResource(keycloakClient.Spec.Client, newResource, oldResource, realm)
+}
+
 func (i *ClusterActionRunner) CreateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error {
 	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy create when client is nil")
@@ -636,6 +670,28 @@ type RemoveClientRoleAction struct {
 	Msg      string
 }
 
+type DeleteClientAuthorizationResourceAction struct {
+	AuthorizationResource *v1alpha1.KeycloakResource
+	Ref                   *v1alpha1.KeycloakClient
+	Realm                 string
+	Msg                   string
+}
+
+type CreateClientAuthorizationResourceAction struct {
+	AuthorizationResource *v1alpha1.KeycloakResource
+	Ref                   *v1alpha1.KeycloakClient
+	Realm                 string
+	Msg                   string
+}
+
+type UpdateClientAuthorizationResourceAction struct {
+	NewAuthorizationResource *v1alpha1.KeycloakResource
+	OldAuthorizationResource *v1alpha1.KeycloakResource
+	Ref                      *v1alpha1.KeycloakClient
+	Realm                    string
+	Msg                      string
+}
+
 type DeleteClientAuthorizationPolicyAction struct {
 	AuthorizationPolicy *v1alpha1.KeycloakPolicy
 	Ref                 *v1alpha1.KeycloakClient
@@ -788,4 +844,16 @@ func (i CreateClientAuthorizationPolicyAction) Run(runner ActionRunner) (string,
 
 func (i UpdateClientAuthorizationPolicyAction) Run(runner ActionRunner) (string, error) {
 	return i.Msg, runner.UpdateClientAuthorizationPolicy(i.Ref, i.NewAuthorizationPolicy, i.OldAuthorizationPolicy, i.Realm)
+}
+
+func (i DeleteClientAuthorizationResourceAction) Run(runner ActionRunner) (string, error) {
+	return i.Msg, runner.DeleteClientAuthorizationResource(i.Ref, i.AuthorizationResource, i.Realm)
+}
+
+func (i CreateClientAuthorizationResourceAction) Run(runner ActionRunner) (string, error) {
+	return i.Msg, runner.CreateClientAuthorizationResource(i.Ref, i.AuthorizationResource, i.Realm)
+}
+
+func (i UpdateClientAuthorizationResourceAction) Run(runner ActionRunner) (string, error) {
+	return i.Msg, runner.UpdateClientAuthorizationResource(i.Ref, i.NewAuthorizationResource, i.OldAuthorizationResource, i.Realm)
 }
