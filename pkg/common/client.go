@@ -78,6 +78,16 @@ func (c *Client) create(obj T, resourcePath, resourceName string) (string, error
 		fmt.Println("user response ", string(d))
 	}
 
+	if resourceName == "client authorization service => resource" {
+		var resource v1alpha1.KeycloakResource
+		data, _ := ioutil.ReadAll(res.Body)
+		err := json.Unmarshal(data, &resource)
+		if err != nil {
+			return "", err
+		}
+		return resource.ID, nil
+	}
+
 	location := strings.Split(res.Header.Get("Location"), "/")
 	uid := location[len(location)-1]
 	return uid, nil
@@ -112,6 +122,54 @@ func (c *Client) CreateClientRealmScopeMappings(specClient *v1alpha1.KeycloakAPI
 func (c *Client) CreateClientClientScopeMappings(specClient *v1alpha1.KeycloakAPIClient, mappings *v1alpha1.ClientMappingsRepresentation, realmName string) error {
 	_, err := c.create(mappings.Mappings, fmt.Sprintf("realms/%s/clients/%s/scope-mappings/clients/%s", realmName, specClient.ID, mappings.ID), "client client scope mappings")
 	return err
+}
+
+func (c *Client) ListClientAuthorizationResources(clientID, realmName string) ([]v1alpha1.KeycloakResource, error) {
+	result, err := c.list(
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource", realmName, clientID),
+		"client authorization service => resource",
+		func(body []byte) (T, error) {
+			var resources []v1alpha1.KeycloakResource
+			err := json.Unmarshal(body, &resources)
+			return resources, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := result.([]v1alpha1.KeycloakResource)
+
+	if !ok {
+		return nil, errors.Errorf("error decoding list client authorization service => resources")
+	}
+
+	return res, nil
+}
+
+func (c *Client) CreateClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, specResource *v1alpha1.KeycloakResource, realmName string) (string, error) {
+	return c.create(
+		specResource,
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource", realmName, specClient.ID),
+		"client authorization service => resource",
+	)
+}
+
+func (c *Client) UpdateClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, newResource *v1alpha1.KeycloakResource, oldResource *v1alpha1.KeycloakResource, realmName string) error {
+	return c.update(
+		newResource,
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource/%s", realmName, specClient.ID, oldResource.ID),
+		"client authorization service => resource",
+	)
+}
+
+func (c *Client) DeleteClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, specResource *v1alpha1.KeycloakResource, realmName string) error {
+	return c.delete(
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource/%s", realmName, specClient.ID, specResource.ID),
+		"client authorization service => resource",
+		nil,
+	)
 }
 
 func (c *Client) ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error) {
@@ -1012,14 +1070,17 @@ type KeycloakInterface interface {
 	UpdateClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 	DeleteClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 
+	ListClientAuthorizationResources(clientID, realmName string) ([]v1alpha1.KeycloakResource, error)
+	CreateClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, specResource *v1alpha1.KeycloakResource, realmName string) (string, error)
+	UpdateClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, newResource *v1alpha1.KeycloakResource, oldResource *v1alpha1.KeycloakResource, realmName string) error
+	DeleteClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, specResource *v1alpha1.KeycloakResource, realmName string) error
+
+	// TODO implement API for updating authorization scopes?
+
 	ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error)
 	CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error)
 	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
-
-	// TODO implement API for updating authorization resources
-
-	// TODO implement API for updating authorization scopes?
 
 	// TODO implement API for updating authorization permissions
 
