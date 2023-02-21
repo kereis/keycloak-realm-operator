@@ -149,7 +149,7 @@ func (c *Client) CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAP
 func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
 	return c.update(
 		newPolicy,
-		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/role/%s", realmName, specClient.ID,
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID,
 			oldPolicy.ID),
 		"client authorization service => policy",
 	)
@@ -157,7 +157,7 @@ func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAP
 
 func (c *Client) DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
 	return c.delete(
-		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/role/%s", realmName, specClient.ID, specPolicy.ID),
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID, specPolicy.ID),
 		"client authorization service => policy",
 		nil,
 	)
