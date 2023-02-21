@@ -114,6 +114,30 @@ func (c *Client) CreateClientClientScopeMappings(specClient *v1alpha1.KeycloakAP
 	return err
 }
 
+func (c *Client) ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error) {
+	result, err := c.list(
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, clientID),
+		"client authorization service => policy",
+		func(body []byte) (T, error) {
+			var policies []v1alpha1.KeycloakPolicy
+			err := json.Unmarshal(body, &policies)
+			return policies, err
+		},
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	res, ok := result.([]v1alpha1.KeycloakPolicy)
+
+	if !ok {
+		return nil, errors.Errorf("error decoding list client authorization service => policies")
+	}
+
+	return res, nil
+}
+
 // / POST /realms/%s/clients/%s/authz/resource-server/policy
 func (c *Client) CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error) {
 	return c.create(
@@ -990,6 +1014,7 @@ type KeycloakInterface interface {
 	UpdateClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 	DeleteClientOptionalClientScope(specClient *v1alpha1.KeycloakAPIClient, clientScope *v1alpha1.KeycloakClientScope, realmName string) error
 
+	ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error)
 	CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error)
 	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
