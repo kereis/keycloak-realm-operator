@@ -180,8 +180,8 @@ func (i *KeycloakClientReconciler) ReconcileClientScopes(state *common.ClientSta
 }
 
 func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
-	if state.Client.AuthorizationSettings != nil {
-		policiesDeleted, _ := model.AuthorizationPoliciesDifferenceIntersection(state.Client.AuthorizationSettings.Policies, cr.Spec.Client.AuthorizationSettings.Policies)
+	if state.AuthorizationPolicies != nil {
+		policiesDeleted, _ := model.AuthorizationPoliciesDifferenceIntersection(state.AuthorizationPolicies, cr.Spec.Client.AuthorizationSettings.Policies)
 
 		// Delete any policies that only exist in state, but not in CR
 		for _, policy := range policiesDeleted {
@@ -190,12 +190,12 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.
 
 		// Track policies that exist in state
 		existingPoliciesById := make(map[string]v1alpha1.KeycloakPolicy)
-		for _, policy := range state.Client.AuthorizationSettings.Policies {
+		for _, policy := range state.AuthorizationPolicies {
 			existingPoliciesById[policy.ID] = policy
 		}
 
 		// Check for new policies in CR, and matching policies in both CR and state
-		newPolicies, matchingPolicies := model.AuthorizationPoliciesDifferenceIntersection(cr.Spec.Client.AuthorizationSettings.Policies, state.Client.AuthorizationSettings.Policies)
+		newPolicies, matchingPolicies := model.AuthorizationPoliciesDifferenceIntersection(cr.Spec.Client.AuthorizationSettings.Policies, state.AuthorizationPolicies)
 		renamedPoliciesOldNames := make(map[string]bool)
 		for _, policy := range matchingPolicies {
 			// If their ID exists, update that policy

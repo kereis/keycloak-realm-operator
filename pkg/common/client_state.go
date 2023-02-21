@@ -25,6 +25,9 @@ type ClientState struct {
 	DeprecatedClientSecret  *v1.Secret // keycloak-client-secret-<clientID>
 	Keycloak                kc.ExternalKeycloak
 	ServiceAccountUserState *UserState
+	AuthorizationPolicies   []kc.KeycloakPolicy
+	AuthorizationResources  []kc.KeycloakResource
+	AuthorizationScopes     []kc.KeycloakScope
 }
 
 func NewClientState(context context.Context, realm *kc.KeycloakRealm, keycloak kc.ExternalKeycloak) *ClientState {
@@ -94,6 +97,19 @@ func (i *ClientState) Read(context context.Context, cr *kc.KeycloakClient, realm
 	err = i.readDefaultRoles(cr, realmClient)
 	if err != nil {
 		return err
+	}
+
+	if i.Client.AuthorizationServicesEnabled {
+		i.AuthorizationPolicies, err = realmClient.ListClientAuthorizationPolicies(cr.Spec.Client.ID, i.Realm.Spec.Realm.Realm)
+		if err != nil {
+			return err
+		}
+
+		// TODO implement API for updating authorization resources
+
+		// TODO implement API for updating authorization scopes?
+
+		// TODO implement API for updating authorization permissions
 	}
 
 	if i.Client.ServiceAccountsEnabled {
