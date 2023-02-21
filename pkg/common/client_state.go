@@ -100,12 +100,15 @@ func (i *ClientState) Read(context context.Context, cr *kc.KeycloakClient, realm
 	}
 
 	if i.Client.AuthorizationServicesEnabled {
-		i.AuthorizationPolicies, err = realmClient.ListClientAuthorizationPolicies(cr.Spec.Client.ID, i.Realm.Spec.Realm.Realm)
+		i.AuthorizationResources, err = realmClient.ListClientAuthorizationResources(cr.Spec.Client.ID, i.Realm.Spec.Realm.Realm)
 		if err != nil {
 			return err
 		}
 
-		// TODO implement API for updating authorization resources
+		i.AuthorizationPolicies, err = realmClient.ListClientAuthorizationPolicies(cr.Spec.Client.ID, i.Realm.Spec.Realm.Realm)
+		if err != nil {
+			return err
+		}
 
 		// TODO implement API for updating authorization scopes?
 
