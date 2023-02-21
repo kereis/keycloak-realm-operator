@@ -249,6 +249,36 @@ func policyMatches(a v1alpha1.KeycloakPolicy, b v1alpha1.KeycloakPolicy) bool {
 	return a.Name == b.Name
 }
 
+func AuthorizationResourcesDifferenceIntersection(a []v1alpha1.KeycloakResource, b []v1alpha1.KeycloakResource) (d []v1alpha1.KeycloakResource, i []v1alpha1.KeycloakResource) {
+	for _, resource := range a {
+		if hasMatchingResource(b, resource) {
+			i = append(i, resource)
+		} else {
+			d = append(d, resource)
+		}
+	}
+
+	return d, i
+}
+
+func hasMatchingResource(resources []v1alpha1.KeycloakResource, otherResource v1alpha1.KeycloakResource) bool {
+	for _, resource := range resources {
+		if resourceMatches(resource, otherResource) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func resourceMatches(a v1alpha1.KeycloakResource, b v1alpha1.KeycloakResource) bool {
+	if a.ID != "" && b.ID != "" {
+		return a.ID == b.ID
+	}
+
+	return a.Name == b.Name
+}
+
 func FilterAuthorizationPoliciesByName(policies []v1alpha1.KeycloakPolicy, names []string) (filteredPolicies []v1alpha1.KeycloakPolicy) {
 	hashMap := make(map[string]v1alpha1.KeycloakPolicy)
 

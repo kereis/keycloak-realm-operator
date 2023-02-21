@@ -68,7 +68,9 @@ func (i *KeycloakClientReconciler) Reconcile(state *common.ClientState, cr *kc.K
 	// -> Extract authorization settings
 
 	if cr.Spec.Client.AuthorizationServicesEnabled {
-		i.ReconcileAuthorizationSettings(state, cr, &desired)
+		i.ReconcileAuthorizationResources(state, cr, &desired)
+
+		i.ReconcileAuthorizationPolicies(state, cr, &desired)
 	}
 
 	if cr.Spec.Client.ServiceAccountsEnabled {
@@ -179,7 +181,60 @@ func (i *KeycloakClientReconciler) ReconcileClientScopes(state *common.ClientSta
 	}
 }
 
-func (i *KeycloakClientReconciler) ReconcileAuthorizationSettings(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
+func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
+	if state.AuthorizationResources != nil {
+		resourcesDeleted, _ := model.AuthorizationResourcesDifferenceIntersection(state.AuthorizationResources, cr.Spec.Client.AuthorizationSettings.Resources)
+
+		// Delete any resources that only exist in state, but not in CR
+		// TODO check why resource ID are not updated properly
+		for _, resource := range resourcesDeleted {
+			desired.AddAction(i.getDeletedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
+		}
+
+		// Track resources that exist in state
+		existingResourcesById := make(map[string]kc.KeycloakResource)
+		for _, resource := range state.AuthorizationResources {
+			existingResourcesById[resource.ID] = resource
+		}
+
+		// Check for new resources in CR, and matching resources in both CR and state
+		newResources, matchingResources := model.AuthorizationResourcesDifferenceIntersection(cr.Spec.Client.AuthorizationSettings.Resources, state.AuthorizationResources)
+		renamedPoliciesOldNames := make(map[string]bool)
+		for _, resource := range matchingResources {
+			// If their ID exists, update that resource
+			if resource.ID != "" {
+				oldResource := existingResourcesById[resource.ID]
+				desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), oldResource.DeepCopy()))
+
+				// If the name has changed, keep track of old names before renaming
+				if resource.Name != oldResource.Name {
+					renamedPoliciesOldNames[oldResource.Name] = true
+				}
+			}
+		}
+
+		// seemingly matching resources without an ID can either be regular updates
+		// or re-creations after renames (not deletions)
+		for _, resource := range matchingResources {
+			if resource.ID == "" {
+				if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
+					desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
+				} else {
+					desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
+				}
+			}
+		}
+
+		// always create resources that don't match any existing ones
+		for _, resource := range newResources {
+			desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
+		}
+	} else {
+		log.Info("Authorization => resources not found, skipping authorization resource reconciliation")
+	}
+}
+
+func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
 	if state.AuthorizationPolicies != nil {
 		policiesDeleted, _ := model.AuthorizationPoliciesDifferenceIntersection(state.AuthorizationPolicies, cr.Spec.Client.AuthorizationSettings.Policies)
 
@@ -517,6 +572,34 @@ func (i *KeycloakClientReconciler) getDeletedClientOptionalClientScopeState(stat
 		Ref:         cr,
 		Realm:       state.Realm.Spec.Realm.Realm,
 		Msg:         fmt.Sprintf("delete client optional client scope %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, clientScope.Name),
+	}
+}
+
+func (i *KeycloakClientReconciler) getCreatedClientAuthorizationResourceState(state *common.ClientState, cr *kc.KeycloakClient, policy *kc.KeycloakResource) common.ClusterAction {
+	return common.CreateClientAuthorizationResourceAction{
+		AuthorizationResource: policy,
+		Ref:                   cr,
+		Realm:                 state.Realm.Spec.Realm.Realm,
+		Msg:                   fmt.Sprintf("create client authorization resource %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, policy.Name),
+	}
+}
+
+func (i *KeycloakClientReconciler) getUpdatedClientAuthorizationResourceState(state *common.ClientState, cr *kc.KeycloakClient, newResource *kc.KeycloakResource, oldResource *kc.KeycloakResource) common.ClusterAction {
+	return common.UpdateClientAuthorizationResourceAction{
+		NewAuthorizationResource: newResource,
+		OldAuthorizationResource: oldResource,
+		Ref:                      cr,
+		Realm:                    state.Realm.Spec.Realm.Realm,
+		Msg:                      fmt.Sprintf("update client authorization resource %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, newResource.Name),
+	}
+}
+
+func (i *KeycloakClientReconciler) getDeletedClientAuthorizationResourceState(state *common.ClientState, cr *kc.KeycloakClient, resource *kc.KeycloakResource) common.ClusterAction {
+	return common.DeleteClientAuthorizationResourceAction{
+		AuthorizationResource: resource,
+		Ref:                   cr,
+		Realm:                 state.Realm.Spec.Realm.Realm,
+		Msg:                   fmt.Sprintf("delete client authorization resource %v/%v => %v", cr.Namespace, cr.Spec.Client.ClientID, resource.Name),
 	}
 }
 
