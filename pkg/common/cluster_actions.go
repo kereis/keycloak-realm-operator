@@ -163,6 +163,24 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 	// Set UUID of created client in original KeycloakClient and return that
 	originalObj.Spec.Client.ID = uid
 
+	// Remove default authorization service entities before proceeding
+	if originalObj.Spec.Client.ServiceAccountsEnabled {
+		if resources, err := i.keycloakClient.ListClientAuthorizationResources(uid, realm); err == nil {
+			for _, resource := range resources {
+				err := i.keycloakClient.DeleteClientAuthorizationResource(originalObj.Spec.Client, resource.DeepCopy(), realm)
+				if err != nil {
+					return err
+				}
+			}
+		} else {
+			return err
+		}
+
+		// TODO scopes?
+
+		// TODO permissions?
+	}
+
 	return i.client.Update(i.context, originalObj)
 }
 
