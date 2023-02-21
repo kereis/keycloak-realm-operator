@@ -415,21 +415,25 @@ func (i *ClusterActionRunner) CreateClientAuthorizationPolicy(keycloakClient *v1
 	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy create when client is nil")
 	}
-	return nil // TODO
+
+	_, err := i.keycloakClient.CreateClientAuthorizationPolicy(keycloakClient.Spec.Client, policy, realm)
+	return err
 }
 
 func (i *ClusterActionRunner) UpdateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realm string) error {
 	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy update when client is nil")
 	}
-	return nil // TODO
+
+	return i.keycloakClient.UpdateClientAuthorizationPolicy(keycloakClient.Spec.Client, newPolicy, oldPolicy, realm)
 }
 
 func (i *ClusterActionRunner) DeleteClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, policy *v1alpha1.KeycloakPolicy, realm string) error {
 	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform authorization policy delete when client is nil")
 	}
-	return nil // TODO
+
+	return i.keycloakClient.DeleteClientAuthorizationPolicy(keycloakClient.Spec.Client, policy, realm)
 }
 
 // An action to create generic kubernetes resources
