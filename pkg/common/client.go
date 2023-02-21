@@ -138,28 +138,26 @@ func (c *Client) ListClientAuthorizationPolicies(clientID, realmName string) ([]
 	return res, nil
 }
 
-// / POST /realms/%s/clients/%s/authz/resource-server/policy
 func (c *Client) CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error) {
 	return c.create(
-		[]*v1alpha1.KeycloakPolicy{specPolicy},
+		specPolicy,
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, specClient.ID),
 		"client authorization service => policy",
 	)
 }
 
-// / PUT /realms/%s/clients/%s/authz/resource-server/policy/{id}
-func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
+func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
 	return c.update(
-		[]*v1alpha1.KeycloakPolicy{specPolicy},
-		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, specClient.ID),
+		newPolicy,
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/role/%s", realmName, specClient.ID,
+			oldPolicy.ID),
 		"client authorization service => policy",
 	)
 }
 
-// / DELETE /realms/%s/clients/%s/authz/resource-server/policy/{id}
 func (c *Client) DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
 	return c.delete(
-		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID, specClient.ID),
+		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/role/%s", realmName, specClient.ID, specPolicy.ID),
 		"client authorization service => policy",
 		nil,
 	)
@@ -1016,7 +1014,7 @@ type KeycloakInterface interface {
 
 	ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error)
 	CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) (string, error)
-	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
+	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 
 	// TODO implement API for updating authorization resources
