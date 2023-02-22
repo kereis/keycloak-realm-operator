@@ -193,8 +193,10 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 
 		// Track resources that exist in state
 		existingResourcesById := make(map[string]kc.KeycloakResource)
+		existingResourcesByName := make(map[string]kc.KeycloakResource)
 		for _, resource := range state.AuthorizationResources {
 			existingResourcesById[resource.ID] = resource
+			existingResourcesByName[resource.Name] = resource
 		}
 
 		// Check for new resources in CR, and matching resources in both CR and state
@@ -210,20 +212,27 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 				if resource.Name != oldResource.Name {
 					renamedPoliciesOldNames[oldResource.Name] = true
 				}
+			} else {
+				if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
+					desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
+				} else {
+					resource.ID = existingResourcesByName[resource.Name].ID // TODO handle errors for access on map
+					desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
+				}
 			}
 		}
 
 		// seemingly matching resources without an ID can either be regular updates
 		// or re-creations after renames (not deletions)
-		for _, resource := range matchingResources {
-			if resource.ID == "" {
-				if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
-					desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
-				} else {
-					desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
-				}
-			}
-		}
+		//for _, resource := range matchingResources {
+		//	if resource.ID == "" {
+		//		if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
+		//			desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
+		//		} else {
+		//			desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
+		//		}
+		//	}
+		//}
 
 		// always create resources that don't match any existing ones
 		for _, resource := range newResources {
@@ -245,8 +254,10 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 
 		// Track policies that exist in state
 		existingPoliciesById := make(map[string]v1alpha1.KeycloakPolicy)
+		existingPoliciesByName := make(map[string]v1alpha1.KeycloakPolicy)
 		for _, policy := range state.AuthorizationPolicies {
 			existingPoliciesById[policy.ID] = policy
+			existingPoliciesByName[policy.Name] = policy
 		}
 
 		// Check for new policies in CR, and matching policies in both CR and state
@@ -262,20 +273,18 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 				if policy.Name != oldPolicy.Name {
 					renamedPoliciesOldNames[oldPolicy.Name] = true
 				}
+			} else {
+				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
+					desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+				} else {
+					policy.ID = existingPoliciesByName[policy.Name].ID // TODO handle errors for access on map
+					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
+				}
 			}
 		}
 
 		// seemingly matching policies without an ID can either be regular updates
 		// or re-creations after renames (not deletions)
-		for _, policy := range matchingPolicies {
-			if policy.ID == "" {
-				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
-					desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
-				} else {
-					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
-				}
-			}
-		}
 
 		// always create policies that don't match any existing ones
 		for _, policy := range newPolicies {
