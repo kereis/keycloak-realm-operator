@@ -475,8 +475,21 @@ func (i *ClusterActionRunner) CreateClientAuthorizationPolicy(keycloakClient *v1
 		return errors.Errorf("cannot perform authorization policy create when client is nil")
 	}
 
-	_, err := i.keycloakClient.CreateClientAuthorizationPolicy(keycloakClient.Spec.Client, policy, realm)
-	return err
+	// We need to set the ID of the created policy so the operator is able to update these policies using their IDs.
+	policyID, err := i.keycloakClient.CreateClientAuthorizationPolicy(keycloakClient.Spec.Client, policy, realm)
+	if err != nil {
+		return err
+	}
+
+	policies := keycloakClient.Spec.Client.AuthorizationSettings.Policies
+	for idx, _ := range policies {
+		if policies[idx].Name == policy.Name {
+			policies[idx].ID = policyID
+			break
+		}
+	}
+
+	return i.client.Update(i.context, keycloakClient)
 }
 
 func (i *ClusterActionRunner) UpdateClientAuthorizationPolicy(keycloakClient *v1alpha1.KeycloakClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realm string) error {

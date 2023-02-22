@@ -26,6 +26,7 @@ import (
 const (
 	authURL                                 = "realms/master/protocol/openid-connect/token"
 	clientAuthorizationResourceResourceName = "client authorization service => resource"
+	clientAuthorizationPolicyResourceName   = "client authorization service => policy"
 )
 
 type Requester interface {
@@ -89,6 +90,16 @@ func (c *Client) create(obj T, resourcePath, resourceName string) (string, error
 			return "", err
 		}
 		return resource.ID, nil
+	}
+
+	if resourceName == clientAuthorizationPolicyResourceName {
+		var policy v1alpha1.KeycloakPolicy
+		data, _ := ioutil.ReadAll(res.Body)
+		err := json.Unmarshal(data, &policy)
+		if err != nil {
+			return "", err
+		}
+		return policy.ID, nil
 	}
 
 	location := strings.Split(res.Header.Get("Location"), "/")
@@ -178,7 +189,7 @@ func (c *Client) DeleteClientAuthorizationResource(specClient *v1alpha1.Keycloak
 func (c *Client) ListClientAuthorizationPolicies(clientID, realmName string) ([]v1alpha1.KeycloakPolicy, error) {
 	result, err := c.list(
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, clientID),
-		"client authorization service => policy",
+		clientAuthorizationPolicyResourceName,
 		func(body []byte) (T, error) {
 			var policies []v1alpha1.KeycloakPolicy
 			err := json.Unmarshal(body, &policies)
@@ -203,7 +214,7 @@ func (c *Client) CreateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAP
 	return c.create(
 		specPolicy,
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy", realmName, specClient.ID),
-		"client authorization service => policy",
+		clientAuthorizationPolicyResourceName,
 	)
 }
 
@@ -212,14 +223,14 @@ func (c *Client) UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAP
 		newPolicy,
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID,
 			oldPolicy.ID),
-		"client authorization service => policy",
+		clientAuthorizationPolicyResourceName,
 	)
 }
 
 func (c *Client) DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error {
 	return c.delete(
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/policy/%s", realmName, specClient.ID, specPolicy.ID),
-		"client authorization service => policy",
+		clientAuthorizationPolicyResourceName,
 		nil,
 	)
 }
