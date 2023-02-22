@@ -445,12 +445,19 @@ func (i *ClusterActionRunner) CreateClientAuthorizationResource(keycloakClient *
 		return errors.Errorf("cannot perform authorization resource create when client is nil")
 	}
 
+	// We need to set the ID of the created resource so the operator is able to update these resource using their IDs.
 	resourceID, err := i.keycloakClient.CreateClientAuthorizationResource(keycloakClient.Spec.Client, resource, realm)
 	if err != nil {
 		return err
 	}
 
-	resource.ID = resourceID
+	resources := keycloakClient.Spec.Client.AuthorizationSettings.Resources
+	for idx, _ := range resources {
+		if resources[idx].Name == resource.Name {
+			resources[idx].ID = resourceID
+			break
+		}
+	}
 
 	return i.client.Update(i.context, keycloakClient)
 }
