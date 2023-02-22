@@ -24,7 +24,8 @@ import (
 )
 
 const (
-	authURL = "realms/master/protocol/openid-connect/token"
+	authURL                                 = "realms/master/protocol/openid-connect/token"
+	clientAuthorizationResourceResourceName = "client authorization service => resource"
 )
 
 type Requester interface {
@@ -78,7 +79,9 @@ func (c *Client) create(obj T, resourcePath, resourceName string) (string, error
 		fmt.Println("user response ", string(d))
 	}
 
-	if resourceName == "client authorization service => resource" {
+	// Endpoint for creating authorization resources does not return an ID in Header "Location", but a JSON
+	// of the created resource instead. We need to parse it and then return its ID.
+	if resourceName == clientAuthorizationResourceResourceName {
 		var resource v1alpha1.KeycloakResource
 		data, _ := ioutil.ReadAll(res.Body)
 		err := json.Unmarshal(data, &resource)
@@ -127,7 +130,7 @@ func (c *Client) CreateClientClientScopeMappings(specClient *v1alpha1.KeycloakAP
 func (c *Client) ListClientAuthorizationResources(clientID, realmName string) ([]v1alpha1.KeycloakResource, error) {
 	result, err := c.list(
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource", realmName, clientID),
-		"client authorization service => resource",
+		clientAuthorizationResourceResourceName,
 		func(body []byte) (T, error) {
 			var resources []v1alpha1.KeycloakResource
 			err := json.Unmarshal(body, &resources)
@@ -152,7 +155,7 @@ func (c *Client) CreateClientAuthorizationResource(specClient *v1alpha1.Keycloak
 	return c.create(
 		specResource,
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource", realmName, specClient.ID),
-		"client authorization service => resource",
+		clientAuthorizationResourceResourceName,
 	)
 }
 
@@ -160,14 +163,14 @@ func (c *Client) UpdateClientAuthorizationResource(specClient *v1alpha1.Keycloak
 	return c.update(
 		newResource,
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource/%s", realmName, specClient.ID, oldResource.ID),
-		"client authorization service => resource",
+		clientAuthorizationResourceResourceName,
 	)
 }
 
 func (c *Client) DeleteClientAuthorizationResource(specClient *v1alpha1.KeycloakAPIClient, specResource *v1alpha1.KeycloakResource, realmName string) error {
 	return c.delete(
 		fmt.Sprintf("realms/%s/clients/%s/authz/resource-server/resource/%s", realmName, specClient.ID, specResource.ID),
-		"client authorization service => resource",
+		clientAuthorizationResourceResourceName,
 		nil,
 	)
 }
