@@ -186,14 +186,13 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 		resourcesDeleted, _ := model.AuthorizationResourcesDifferenceIntersection(state.AuthorizationResources, cr.Spec.Client.AuthorizationSettings.Resources)
 
 		// Delete any resources that only exist in state, but not in CR
-		// TODO check why resource ID are not updated properly
 		for _, resource := range resourcesDeleted {
 			desired.AddAction(i.getDeletedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
 		}
 
 		// Track resources that exist in state
 		existingResourcesById := make(map[string]kc.KeycloakResource)
-		existingResourcesByName := make(map[string]kc.KeycloakResource)
+		existingResourcesByName := make(map[string]kc.KeycloakResource) // Resource names are unique
 		for _, resource := range state.AuthorizationResources {
 			existingResourcesById[resource.ID] = resource
 			existingResourcesByName[resource.Name] = resource
@@ -205,6 +204,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 		for _, resource := range matchingResources {
 			// If their ID exists, update that resource
 			if resource.ID != "" {
+				// In case the name changes, we need the previous revision of the resource and use its ID
 				oldResource := existingResourcesById[resource.ID]
 				desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), oldResource.DeepCopy()))
 
@@ -212,7 +212,13 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 				if resource.Name != oldResource.Name {
 					renamedPoliciesOldNames[oldResource.Name] = true
 				}
-			} else {
+			}
+		}
+
+		// seemingly matching resources without an ID can either be regular updates
+		// or re-creations after renames (not deletions)
+		for _, resource := range matchingResources {
+			if resource.ID == "" {
 				if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
 					desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
 				} else {
@@ -221,18 +227,6 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 				}
 			}
 		}
-
-		// seemingly matching resources without an ID can either be regular updates
-		// or re-creations after renames (not deletions)
-		//for _, resource := range matchingResources {
-		//	if resource.ID == "" {
-		//		if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
-		//			desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
-		//		} else {
-		//			desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
-		//		}
-		//	}
-		//}
 
 		// always create resources that don't match any existing ones
 		for _, resource := range newResources {
@@ -273,18 +267,19 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 				if policy.Name != oldPolicy.Name {
 					renamedPoliciesOldNames[oldPolicy.Name] = true
 				}
-			} else {
-				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
-					desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
-				} else {
-					policy.ID = existingPoliciesByName[policy.Name].ID // TODO handle errors for access on map
-					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
-				}
 			}
 		}
 
 		// seemingly matching policies without an ID can either be regular updates
 		// or re-creations after renames (not deletions)
+		for _, policy := range matchingPolicies {
+			if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
+				desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+			} else {
+				policy.ID = existingPoliciesByName[policy.Name].ID // TODO handle errors for access on map
+				desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
+			}
+		}
 
 		// always create policies that don't match any existing ones
 		for _, policy := range newPolicies {
