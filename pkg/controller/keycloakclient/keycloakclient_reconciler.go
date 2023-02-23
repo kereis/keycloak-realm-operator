@@ -64,9 +64,6 @@ func (i *KeycloakClientReconciler) Reconcile(state *common.ClientState, cr *kc.K
 
 	i.ReconcileDefaultClientRoles(state, cr, &desired)
 
-	// TODO import extracted authorization settings
-	// -> Extract authorization settings
-
 	if cr.Spec.Client.AuthorizationServicesEnabled {
 		i.ReconcileAuthorizationResources(state, cr, &desired)
 
@@ -222,7 +219,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 				if _, contains := renamedPoliciesOldNames[resource.Name]; contains {
 					desired.AddAction(i.getCreatedClientAuthorizationResourceState(state, cr, resource.DeepCopy()))
 				} else {
-					resource.ID = existingResourcesByName[resource.Name].ID // TODO handle errors for access on map
+					resource.ID = existingResourcesByName[resource.Name].ID
 					desired.AddAction(i.getUpdatedClientAuthorizationResourceState(state, cr, resource.DeepCopy(), resource.DeepCopy()))
 				}
 			}
@@ -276,7 +273,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 			if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
 				desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
 			} else {
-				policy.ID = existingPoliciesByName[policy.Name].ID // TODO handle errors for access on map
+				policy.ID = existingPoliciesByName[policy.Name].ID
 				desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
 			}
 		}

@@ -111,8 +111,6 @@ func (i *ClientState) Read(context context.Context, cr *kc.KeycloakClient, realm
 		}
 
 		// TODO implement API for updating authorization scopes?
-
-		// TODO implement API for updating authorization permissions
 	}
 
 	if i.Client.ServiceAccountsEnabled {

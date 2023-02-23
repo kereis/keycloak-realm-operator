@@ -177,8 +177,6 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 		}
 
 		// TODO scopes?
-
-		// TODO permissions?
 	}
 
 	return i.client.Update(i.context, originalObj)

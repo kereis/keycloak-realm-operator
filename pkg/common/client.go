@@ -1096,8 +1096,6 @@ type KeycloakInterface interface {
 	UpdateClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, newPolicy *v1alpha1.KeycloakPolicy, oldPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 	DeleteClientAuthorizationPolicy(specClient *v1alpha1.KeycloakAPIClient, specPolicy *v1alpha1.KeycloakPolicy, realmName string) error
 
-	// TODO implement API for updating authorization permissions
-
 	CreateUser(user *v1alpha1.KeycloakAPIUser, realmName string) (string, error)
 	CreateFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) (string, error)
 	RemoveFederatedIdentity(fid v1alpha1.FederatedIdentity, userID string, realmName string) error
