@@ -164,7 +164,7 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 	originalObj.Spec.Client.ID = uid
 
 	// Remove default authorization service entities before proceeding
-	if originalObj.Spec.Client.ServiceAccountsEnabled {
+	if originalObj.Spec.Client.AuthorizationServicesEnabled {
 		if resources, err := i.keycloakClient.ListClientAuthorizationResources(uid, realm); err == nil {
 			for _, resource := range resources {
 				err := i.keycloakClient.DeleteClientAuthorizationResource(originalObj.Spec.Client, resource.DeepCopy(), realm)
