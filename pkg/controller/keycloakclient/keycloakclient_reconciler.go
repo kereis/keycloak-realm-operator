@@ -270,11 +270,13 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 		// seemingly matching policies without an ID can either be regular updates
 		// or re-creations after renames (not deletions)
 		for _, policy := range matchingPolicies {
-			if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
-				desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
-			} else {
-				policy.ID = existingPoliciesByName[policy.Name].ID
-				desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
+			if policy.ID == "" {
+				if _, contains := renamedPoliciesOldNames[policy.Name]; contains {
+					desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
+				} else {
+					policy.ID = existingPoliciesByName[policy.Name].ID
+					desired.AddAction(i.getUpdatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy(), policy.DeepCopy()))
+				}
 			}
 		}
 
