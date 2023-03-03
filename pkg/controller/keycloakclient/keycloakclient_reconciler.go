@@ -179,7 +179,7 @@ func (i *KeycloakClientReconciler) ReconcileClientScopes(state *common.ClientSta
 }
 
 func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
-	if state.AuthorizationResources != nil {
+	if cr.Spec.Client.AuthorizationSettings.Resources != nil {
 		resourcesDeleted, _ := model.AuthorizationResourcesDifferenceIntersection(state.AuthorizationResources, cr.Spec.Client.AuthorizationSettings.Resources)
 
 		// Delete any resources that only exist in state, but not in CR
@@ -235,7 +235,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationResources(state *common
 }
 
 func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
-	if state.AuthorizationPolicies != nil {
+	if cr.Spec.Client.AuthorizationSettings.Policies != nil {
 		policiesDeleted, _ := model.AuthorizationPoliciesDifferenceIntersection(state.AuthorizationPolicies, cr.Spec.Client.AuthorizationSettings.Policies)
 
 		// Delete any policies that only exist in state, but not in CR
