@@ -285,7 +285,7 @@ func (i *KeycloakClientReconciler) ReconcileAuthorizationPolicies(state *common.
 			desired.AddAction(i.getCreatedClientAuthorizationPolicyState(state, cr, policy.DeepCopy()))
 		}
 	} else {
-		log.Info("Authorization settings not found, skipping authorization settings reconciliation")
+		log.Info("Authorization => policies not found, skipping authorization settings reconciliation")
 	}
 }
 
