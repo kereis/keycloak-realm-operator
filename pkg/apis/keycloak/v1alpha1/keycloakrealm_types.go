@@ -32,7 +32,7 @@ type KeycloakAPIRealm struct {
 	Realm string `json:"realm"`
 	// Realm enabled flag.
 	// +optional
-	Enabled bool `json:"enabled"`
+	Enabled *bool `json:"enabled"`
 	// Realm display name.
 	// +optional
 	DisplayName string `json:"displayName,omitempty"`
@@ -431,6 +431,31 @@ type KeycloakAPIRealm struct {
 	// Client policies
 	// +optional
 	ClientPolicies apiextensionsv1.JSON `json:"clientPolicies,omitempty"`
+
+	// Required actions
+	// +optional
+	RequiredActions []RequiredActionProviderRepresentation `json:"requiredActions,omitempty"`
+
+	// Components
+	// +optional
+	Components map[string][]ComponentExportRepresentation `json:"components,omitempty"`
+}
+type ComponentExportRepresentation struct {
+	Config        map[string][]string                        `json:"config,omitempty"`
+	Id            string                                     `json:"id,omitempty"`
+	Name          string                                     `json:"name,omitempty"`
+	ProviderId    string                                     `json:"providerId,omitempty"`
+	SubComponents map[string][]ComponentExportRepresentation `json:"subComponents,omitempty"`
+}
+
+type RequiredActionProviderRepresentation struct {
+	DefaultAction bool              `json:"defaultAction,omitEmpty"`
+	ProviderID    string            `json:"providerId,omitEmpty"`
+	Name          string            `json:"name,omitEmpty"`
+	Alias         string            `json:"alias,omitEmpty"`
+	Priority      int32             `json:"priority,omitEmpty"`
+	Config        map[string]string `json:"config,omitEmpty"`
+	Enabled       bool              `json:"enabled,omitEmpty"`
 }
 
 type RoleRepresentationArray []RoleRepresentation
