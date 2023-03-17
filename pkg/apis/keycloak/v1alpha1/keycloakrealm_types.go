@@ -1,6 +1,7 @@
 package v1alpha1
 
 import (
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -34,7 +35,12 @@ type KeycloakAPIRealm struct {
 	Enabled bool `json:"enabled"`
 	// Realm display name.
 	// +optional
-	DisplayName string `json:"displayName"`
+	DisplayName string `json:"displayName,omitempty"`
+	// +optional
+	NotBefore int `json:"notBefore,omitempty"`
+	// Realm default signature algorithm
+	// +optional
+	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm,omitempty"`
 	// Realm HTML display name.
 	// +optional
 	DisplayNameHTML string `json:"displayNameHtml,omitempty"`
@@ -72,6 +78,14 @@ type KeycloakAPIRealm struct {
 	// +optional
 	AdminEventsDetailsEnabled *bool `json:"adminEventsDetailsEnabled,omitempty"`
 
+	// Keycloak version
+	// +optional
+	KeycloakVersion string `json:"keycloakVersion,omitempty"`
+
+	// Attributes
+	// +optional
+	Attributes map[string]string `json:"attributes,omitempty"`
+
 	// Client scopes
 	// +optional
 	ClientScopes []KeycloakClientScope `json:"clientScopes,omitempty"`
@@ -79,6 +93,14 @@ type KeycloakAPIRealm struct {
 	// Default client scopes to add to all new clients
 	// +optional
 	DefaultDefaultClientScopes []string `json:"defaultDefaultClientScopes,omitempty"`
+
+	// Default optional client scopes
+	// +optional
+	DefaultOptionalClientScopes []string `json:"defaultOptionalClientScopes,omitempty"`
+
+	// Browser security headers
+	// +optional
+	BrowserSecurityHeaders map[string]string `json:"browserSecurityHeaders,omitempty"`
 
 	// Authentication flows
 	// +optional
@@ -199,6 +221,70 @@ type KeycloakAPIRealm struct {
 	// +optional
 	AccessTokenLifespan *int32 `json:"accessTokenLifespan,omitempty"`
 
+	// Access code lifespan
+	// +optional
+	AccessCodeLifespan *int32 `json:"accessCodeLifespan,omitempty"`
+	// Access code lifespan for user action
+	// +optional
+	AccessCodeLifeSpanUserAction *int32 `json:"accessCodeLifeSpanUserAction,omitempty"`
+	// Access code lifespan for login
+	// +optional
+	AccessCodeLifespanLogin *int32 `json:"accessCodeLifespanLogin,omitempty"`
+
+	// Access code lifespan
+	// +optional
+	ActionTokenGeneratedByAdminLifespan *int32 `json:"actionTokenGeneratedByAdminLifespan,omitempty"`
+	// Access code lifespan for user action
+	// +optional
+	ActionTokenGeneratedByUserLifespan *int32 `json:"actionTokenGeneratedByUserLifespan,omitempty"`
+
+	// OAuth2 device code lifespan
+	// +optional
+	Oauth2DeviceCodeLifespan *int32 `json:"oauth2DeviceCodeLifespan,omitempty"`
+	//  OAuth2 device code lifespan
+	// +optional
+	Oauth2DevicePollingInterval *int32 `json:"oauth2DevicePollingInterval,omitempty"`
+
+	// SSO session idle timeout
+	// +optional
+	SsoSessionIdleTimeout *int32 `json:"ssoSessionIdleTimeout,omitempty"`
+	// SSO session max lifespan
+	// +optional
+	SsoSessionMaxLifespan *int32 `json:"ssoSessionMaxLifespan,omitempty"`
+	// SSO session idle timeout (remember me option)
+	// +optional
+	SsoSessionIdleTimeoutRememberMe *int32 `json:"ssoSessionIdleTimeoutRememberMe,omitempty"`
+	// SSO session max lifespan (remember me option)
+	// +optional
+	SsoSessionMaxLifespanRememberMe *int32 `json:"ssoSessionMaxLifespanRememberMe,omitempty"`
+
+	// Offline session idle timeout
+	// +optional
+	OfflineSessionIdleTimeout *int32 `json:"offlineSessionIdleTimeout,omitempty"`
+	// Offline session max lifespan enabled
+	// +optional
+	OfflineSessionMaxLifespanEnabled *bool `json:"offlineSessionMaxLifespanEnabled,omitempty"`
+	// Offline session max lifespan
+	// +optional
+	OfflineSessionMaxLifespan *int32 `json:"offlineSessionMaxLifespan,omitempty"`
+
+	// Client session idle timeout
+	// +optional
+	ClientSessionIdleTimeout *int32 `json:"clientSessionIdleTimeout,omitempty"`
+	// Client session max lifespan
+	// +optional
+	ClientSessionMaxLifespan *int32 `json:"clientSessionMaxLifespan,omitempty"`
+	// Client offline session idle timeout
+	// +optional
+	ClientOfflineSessionIdleTimeout *int32 `json:"clientOfflineSessionIdleTimeout,omitempty"`
+	// Client offline session max lifespan
+	// +optional
+	ClientOfflineSessionMaxLifespan *int32 `json:"clientOfflineSessionMaxLifespan,omitempty"`
+
+	// Required credentials
+	// +optional
+	RequiredCredentials []string `json:"requiredCredentials,omitempty"`
+
 	// User Managed Access Allowed
 	// +optional
 	UserManagedAccessAllowed *bool `json:"userManagedAccessAllowed,omitempty"`
@@ -231,6 +317,10 @@ type KeycloakAPIRealm struct {
 	// +optional
 	OtpSupportedApplications []string `json:"otpSupportedApplications,omitempty"`
 
+	// OTP policy code reusable?
+	// +optional
+	OtpPolicyCodeReusable *bool `json:"otpPolicyCodeReusable,omitempty"`
+
 	// Browser authentication flow
 	// +optional
 	BrowserFlow string `json:"browserFlow,omitempty"`
@@ -254,6 +344,13 @@ type KeycloakAPIRealm struct {
 	// Docker Authentication flow
 	// +optional
 	DockerAuthenticationFlow string `json:"dockerAuthenticationFlow,omitempty"`
+
+	// Client profiles
+	// +optional
+	ClientProfiles apiextensionsv1.JSON `json:"clientProfiles,omitempty"`
+	// Client policies
+	// +optional
+	ClientPolicies apiextensionsv1.JSON `json:"clientPolicies,omitempty"`
 }
 
 type RoleRepresentationArray []RoleRepresentation
@@ -366,7 +463,6 @@ type KeycloakAPIUserFederationProvider struct {
 	ProviderName string `json:"providerName,omitempty"`
 }
 
-//
 // https://www.keycloak.org/docs/11.0/server_admin/#_ldap_mappers
 // https://www.keycloak.org/docs-api/11.0/rest-api/index.html#_userfederationmapperrepresentation
 type KeycloakAPIUserFederationMapper struct {
@@ -426,6 +522,11 @@ type KeycloakAPIAuthenticationExecution struct {
 	// Authenticator flow
 	// +optional
 	AuthenticatorFlow bool `json:"authenticatorFlow,omitempty"`
+
+	// Authenticator flow (deprecated property; has spelling error)
+	// (Please use `authenticatorFlow` instead)
+	// +optional
+	AutheticatorFlow bool `json:"autheticatorFlow,omitempty"`
 
 	// Flow Alias
 	// +optional
