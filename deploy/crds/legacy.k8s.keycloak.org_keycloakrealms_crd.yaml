@@ -78,6 +78,18 @@ spec:
               realm:
                 description: Keycloak Realm REST object.
                 properties:
+                  accessCodeLifeSpanUserAction:
+                    description: Access code lifespan for user action
+                    format: int32
+                    type: integer
+                  accessCodeLifespan:
+                    description: Access code lifespan
+                    format: int32
+                    type: integer
+                  accessCodeLifespanLogin:
+                    description: Access code lifespan for login
+                    format: int32
+                    type: integer
                   accessTokenLifespan:
                     description: Access Token Lifespan
                     format: int32
@@ -89,6 +101,14 @@ spec:
                   accountTheme:
                     description: Account Theme
                     type: string
+                  actionTokenGeneratedByAdminLifespan:
+                    description: Access code lifespan
+                    format: int32
+                    type: integer
+                  actionTokenGeneratedByUserLifespan:
+                    description: Access code lifespan for user action
+                    format: int32
+                    type: integer
                   adminEventsDetailsEnabled:
                     description: 'Enable admin events details TODO: change to values
                       and use kubebuilder default annotation once supported'
@@ -100,6 +120,11 @@ spec:
                   adminTheme:
                     description: Admin Console Theme
                     type: string
+                  attributes:
+                    additionalProperties:
+                      type: string
+                    description: Attributes
+                    type: object
                   authenticationFlows:
                     description: Authentication flows
                     items:
@@ -119,6 +144,11 @@ spec:
                                 type: string
                               authenticatorFlow:
                                 description: Authenticator flow
+                                type: boolean
+                              autheticatorFlow:
+                                description: Authenticator flow (deprecated property;
+                                  has spelling error) (Please use `authenticatorFlow`
+                                  instead)
                                 type: boolean
                               flowAlias:
                                 description: Flow Alias
@@ -178,12 +208,31 @@ spec:
                   browserFlow:
                     description: Browser authentication flow
                     type: string
+                  browserSecurityHeaders:
+                    additionalProperties:
+                      type: string
+                    description: Browser security headers
+                    type: object
                   bruteForceProtected:
                     description: Brute Force Detection
                     type: boolean
                   clientAuthenticationFlow:
                     description: Client authentication flow
                     type: string
+                  clientOfflineSessionIdleTimeout:
+                    description: Client offline session idle timeout
+                    format: int32
+                    type: integer
+                  clientOfflineSessionMaxLifespan:
+                    description: Client offline session max lifespan
+                    format: int32
+                    type: integer
+                  clientPolicies:
+                    description: Client policies
+                    x-kubernetes-preserve-unknown-fields: true
+                  clientProfiles:
+                    description: Client profiles
+                    x-kubernetes-preserve-unknown-fields: true
                   clientScopeMappings:
                     additionalProperties:
                       items:
@@ -254,6 +303,14 @@ spec:
                           type: array
                       type: object
                     type: array
+                  clientSessionIdleTimeout:
+                    description: Client session idle timeout
+                    format: int32
+                    type: integer
+                  clientSessionMaxLifespan:
+                    description: Client session max lifespan
+                    format: int32
+                    type: integer
                   clients:
                     description: A set of Keycloak Clients.
                     items:
@@ -845,6 +902,11 @@ spec:
                   defaultLocale:
                     description: Default Locale
                     type: string
+                  defaultOptionalClientScopes:
+                    description: Default optional client scopes
+                    items:
+                      type: string
+                    type: array
                   defaultRole:
                     description: Default role
                     properties:
@@ -892,6 +954,9 @@ spec:
                     required:
                     - name
                     type: object
+                  defaultSignatureAlgorithm:
+                    description: Realm default signature algorithm
+                    type: string
                   directGrantFlow:
                     description: Direct Grant authentication flow
                     type: string
@@ -1005,6 +1070,9 @@ spec:
                   internationalizationEnabled:
                     description: Internationalization Enabled
                     type: boolean
+                  keycloakVersion:
+                    description: Keycloak version
+                    type: string
                   loginTheme:
                     description: Login Theme
                     type: string
@@ -1023,9 +1091,33 @@ spec:
                     description: Minimum Quick Login Wait
                     format: int32
                     type: integer
+                  notBefore:
+                    type: integer
+                  oauth2DeviceCodeLifespan:
+                    description: OAuth2 device code lifespan
+                    format: int32
+                    type: integer
+                  oauth2DevicePollingInterval:
+                    description: ' OAuth2 device code lifespan'
+                    format: int32
+                    type: integer
+                  offlineSessionIdleTimeout:
+                    description: Offline session idle timeout
+                    format: int32
+                    type: integer
+                  offlineSessionMaxLifespan:
+                    description: Offline session max lifespan
+                    format: int32
+                    type: integer
+                  offlineSessionMaxLifespanEnabled:
+                    description: Offline session max lifespan enabled
+                    type: boolean
                   otpPolicyAlgorithm:
                     description: OTP Policy Algorithm
                     type: string
+                  otpPolicyCodeReusable:
+                    description: OTP policy code reusable?
+                    type: boolean
                   otpPolicyDigits:
                     description: OTP Policy Digits
                     format: int32
@@ -1075,6 +1167,11 @@ spec:
                   rememberMe:
                     description: Remember me
                     type: boolean
+                  requiredCredentials:
+                    description: Required credentials
+                    items:
+                      type: string
+                    type: array
                   resetCredentialsFlow:
                     description: Reset Credentials authentication flow
                     type: string
@@ -1216,6 +1313,22 @@ spec:
                   sslRequired:
                     description: Require SSL
                     type: string
+                  ssoSessionIdleTimeout:
+                    description: SSO session idle timeout
+                    format: int32
+                    type: integer
+                  ssoSessionIdleTimeoutRememberMe:
+                    description: SSO session idle timeout (remember me option)
+                    format: int32
+                    type: integer
+                  ssoSessionMaxLifespan:
+                    description: SSO session max lifespan
+                    format: int32
+                    type: integer
+                  ssoSessionMaxLifespanRememberMe:
+                    description: SSO session max lifespan (remember me option)
+                    format: int32
+                    type: integer
                   supportedLocales:
                     description: Supported Locales
                     items:
