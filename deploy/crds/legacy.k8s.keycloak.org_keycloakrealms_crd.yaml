@@ -78,16 +78,16 @@ spec:
               realm:
                 description: Keycloak Realm REST object.
                 properties:
-                  accessCodeLifeSpanUserAction:
-                    description: Access code lifespan for user action
-                    format: int32
-                    type: integer
                   accessCodeLifespan:
                     description: Access code lifespan
                     format: int32
                     type: integer
                   accessCodeLifespanLogin:
                     description: Access code lifespan for login
+                    format: int32
+                    type: integer
+                  accessCodeLifespanUserAction:
+                    description: Access code lifespan for user action
                     format: int32
                     type: integer
                   accessTokenLifespan:
@@ -894,6 +894,32 @@ spec:
                       - clientId
                       type: object
                     type: array
+                  components:
+                    additionalProperties:
+                      items:
+                        properties:
+                          config:
+                            additionalProperties:
+                              items:
+                                type: string
+                              type: array
+                            type: object
+                          id:
+                            type: string
+                          name:
+                            type: string
+                          providerId:
+                            type: string
+                          subComponents:
+                            items:
+                              x-kubernetes-preserve-unknown-fields: true
+                            type: array
+                          subType:
+                            type: string
+                        type: object
+                      type: array
+                    description: Components
+                    type: object
                   defaultDefaultClientScopes:
                     description: Default client scopes to add to all new clients
                     items:
@@ -1155,6 +1181,10 @@ spec:
                   realm:
                     description: Realm name.
                     type: string
+                  refreshTokenMaxReuse:
+                    description: Revoke refresh token max use
+                    format: int32
+                    type: integer
                   registrationAllowed:
                     description: User registration
                     type: boolean
@@ -1167,6 +1197,37 @@ spec:
                   rememberMe:
                     description: Remember me
                     type: boolean
+                  requiredActions:
+                    description: Required actions
+                    items:
+                      properties:
+                        alias:
+                          type: string
+                        config:
+                          additionalProperties:
+                            type: string
+                          type: object
+                        defaultAction:
+                          type: boolean
+                        enabled:
+                          type: boolean
+                        name:
+                          type: string
+                        priority:
+                          format: int32
+                          type: integer
+                        providerId:
+                          type: string
+                      required:
+                      - alias
+                      - config
+                      - defaultAction
+                      - enabled
+                      - name
+                      - priority
+                      - providerId
+                      type: object
+                    type: array
                   requiredCredentials:
                     description: Required credentials
                     items:
@@ -1177,6 +1238,9 @@ spec:
                     type: string
                   resetPasswordAllowed:
                     description: Forgot password
+                    type: boolean
+                  revokeRefreshToken:
+                    description: Revoke refresh token
                     type: boolean
                   roles:
                     description: Roles
