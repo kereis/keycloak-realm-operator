@@ -226,7 +226,7 @@ type KeycloakAPIRealm struct {
 	AccessCodeLifespan *int32 `json:"accessCodeLifespan,omitempty"`
 	// Access code lifespan for user action
 	// +optional
-	AccessCodeLifeSpanUserAction *int32 `json:"accessCodeLifeSpanUserAction,omitempty"`
+	AccessCodeLifeSpanUserAction *int32 `json:"accessCodeLifespanUserAction,omitempty"`
 	// Access code lifespan for login
 	// +optional
 	AccessCodeLifespanLogin *int32 `json:"accessCodeLifespanLogin,omitempty"`
@@ -438,14 +438,26 @@ type KeycloakAPIRealm struct {
 
 	// Components
 	// +optional
-	Components map[string][]ComponentExportRepresentation `json:"components,omitempty"`
+	Components map[string]ComponentExportRepresentationArray `json:"components,omitempty"`
+
+	// Revoke refresh token
+	// +optional
+	RevokeRefreshToken bool `json:"revokeRefreshToken,omitempty"`
+
+	// Revoke refresh token max use
+	// +optional
+	RefreshTokenMaxReuse *int32 `json:"refreshTokenMaxReuse,omitempty"`
 }
+
+type ComponentExportRepresentationArray []ComponentExportRepresentation
+
 type ComponentExportRepresentation struct {
-	Config        map[string][]string                        `json:"config,omitempty"`
-	Id            string                                     `json:"id,omitempty"`
-	Name          string                                     `json:"name,omitempty"`
-	ProviderId    string                                     `json:"providerId,omitempty"`
-	SubComponents map[string][]ComponentExportRepresentation `json:"subComponents,omitempty"`
+	Config        map[string][]string    `json:"config,omitempty"`
+	Id            string                 `json:"id,omitempty"`
+	Name          string                 `json:"name,omitempty"`
+	ProviderId    string                 `json:"providerId,omitempty"`
+	SubType       string                 `json:"subType,omitempty"`
+	SubComponents []apiextensionsv1.JSON `json:"subComponents,omitempty"`
 }
 
 type RequiredActionProviderRepresentation struct {
